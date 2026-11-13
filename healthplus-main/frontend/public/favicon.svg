@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <circle cx="32" cy="32" r="30" fill="#123B32" />
+  <path d="M32 14C23.163 14 16 21.163 16 30C16 38.837 23.163 46 32 46C40.837 46 48 38.837 48 30C48 21.163 40.837 14 32 14Z" fill="#187A5B" opacity="0.4" />
+  <!-- Stylized leaf & pulse node -->
+  <path d="M22 34C22 25 32 18 32 18C32 18 42 25 42 34C42 39.523 37.523 44 32 44C26.477 44 22 39.523 22 34Z" fill="#187A5B" />
+  <circle cx="32" cy="30" r="4.5" fill="#E7B76B" />
+  <path d="M26 31L30 31L32 26L34 35L36 31L38 31" stroke="#FAF9F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

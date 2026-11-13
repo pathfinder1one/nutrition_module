@@ -1,0 +1,151 @@
+/* Ambient Organic Gradients and Kinetic Drifts */
+
+@keyframes hp-drift-primary {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(50px, 40px, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-30px, 70px, 0) scale(0.95);
+  }
+}
+
+@keyframes hp-drift-secondary {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-60px, -45px, 0) scale(1.12);
+  }
+  100% {
+    transform: translate3d(40px, -25px, 0) scale(0.92);
+  }
+}
+
+@keyframes hp-drift-tertiary {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.96);
+  }
+  50% {
+    transform: translate3d(30px, -40px, 0) scale(1.05);
+  }
+  100% {
+    transform: translate3d(-40px, 30px, 0) scale(1.02);
+  }
+}
+
+/* Orbital Rings Rotations */
+@keyframes hp-orbital-clockwise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hp-orbital-counter {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+/* Breathing & Pulsing Accents */
+@keyframes hp-pulse-breath {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.03);
+  }
+}
+
+/* Optical Scanner Sweep */
+@keyframes hp-scan-sweep {
+  0% {
+    top: 5%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    top: 95%;
+    opacity: 0;
+  }
+}
+
+/* Floating Shapes */
+@keyframes hp-float-shape {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -18px, 0) rotate(3deg);
+  }
+}
+
+/* Utility Animation Classes */
+.animate-drift-primary {
+  animation: hp-drift-primary 24s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-drift-secondary {
+  animation: hp-drift-secondary 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-drift-tertiary {
+  animation: hp-drift-tertiary 20s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-orbital-cw {
+  animation: hp-orbital-clockwise 45s linear infinite;
+  will-change: transform;
+}
+
+.animate-orbital-ccw {
+  animation: hp-orbital-counter 60s linear infinite;
+  will-change: transform;
+}
+
+.animate-pulse-breath {
+  animation: hp-pulse-breath 6s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-float-shape {
+  animation: hp-float-shape 8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-scan-sweep {
+  animation: hp-scan-sweep 2.8s ease-in-out infinite;
+}
+
+/* Prefers-Reduced-Motion Accessibility Overrides */
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift-primary,
+  .animate-drift-secondary,
+  .animate-drift-tertiary,
+  .animate-orbital-cw,
+  .animate-orbital-ccw,
+  .animate-pulse-breath,
+  .animate-float-shape,
+  .animate-scan-sweep {
+    animation: none !important;
+    transform: none !important;
+  }
+}
