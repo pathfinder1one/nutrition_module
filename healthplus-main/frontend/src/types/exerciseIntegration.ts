@@ -1,8 +1,10 @@
+import type { ExerciseTypeId } from './wellness';
+
 export interface ExerciseLiveEvent {
   eventType: 'FRAME_EVALUATION' | 'REP_COMPLETED' | 'FORM_WARNING' | 'UNCERTAINTY';
   timestamp: number;
   currentRepCount: number;
-  activeExercise: 'squat' | 'pushup';
+  activeExercise: ExerciseTypeId;
   currentJointAngleDegrees?: number;
   formStatus: 'optimal' | 'good' | 'needs_work' | 'uncertain';
   instantFeedbackCue?: string;
@@ -12,7 +14,7 @@ export interface ExerciseLiveEvent {
 }
 
 export interface ExerciseSessionSummary {
-  exerciseId: 'squat' | 'pushup';
+  exerciseId: ExerciseTypeId;
   sessionStatus: 'completed' | 'abandoned' | 'paused';
   startedAt: string;
   endedAt: string;
@@ -31,7 +33,7 @@ export interface ExerciseSessionSummary {
 }
 
 export interface ExerciseStudioProps {
-  exerciseType: 'squat' | 'pushup';
+  exerciseType: ExerciseTypeId;
   targetReps?: number;
   voiceCoachEnabled: boolean;
   onLiveEvent?: (event: ExerciseLiveEvent) => void;

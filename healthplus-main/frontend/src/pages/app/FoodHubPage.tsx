@@ -311,7 +311,11 @@ export const FoodHubPage: React.FC<FoodHubPageProps> = ({
                   <Card key={recipe.id} variant="elevated" className="overflow-hidden flex flex-col">
                     <div className="p-4 sm:p-5 space-y-4 flex-1">
                       <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-4 items-center">
-                        <RecipeVisual theme={recipe.visualTheme} />
+                        <RecipeVisual
+                          theme={recipe.visualTheme}
+                          imageUrl={recipe.imageUrl}
+                          name={recipe.name}
+                        />
 
                         <div className="space-y-1.5">
                           <div className="flex flex-wrap items-center gap-1.5">
@@ -672,7 +676,7 @@ export const FoodHubPage: React.FC<FoodHubPageProps> = ({
             </div>
 
             {/* Food Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {filteredPantryItems.slice(0, pantryPageSize).map((food) => {
                 const isAvail =
                   available.includes(food.name as IngredientKey) ||
@@ -686,7 +690,7 @@ export const FoodHubPage: React.FC<FoodHubPageProps> = ({
                     key={food.id}
                     type="button"
                     onClick={() => handleToggleIngredient(food.name as IngredientKey)}
-                    className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2 ${
+                    className={`p-2.5 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2 hover:shadow-md hover:scale-[1.01] ${
                       isAvail
                         ? 'bg-emerald/15 border-emerald text-forest dark:text-white shadow-sm ring-1 ring-emerald'
                         : isUnavail
@@ -694,13 +698,30 @@ export const FoodHubPage: React.FC<FoodHubPageProps> = ({
                           : 'bg-forest/4 dark:bg-white/5 border-forest/10 dark:border-white/10 text-forest/75 dark:text-ivory/75 hover:bg-forest/8'
                     }`}
                   >
+                    {/* Dish Photo Thumbnail & Real-Time Badges */}
+                    <div className="relative w-full h-28 overflow-hidden rounded-xl bg-forest/5 dark:bg-black/25">
+                      <img
+                        src={food.imageUrl || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80'}
+                        alt={food.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src =
+                            'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80';
+                        }}
+                      />
+                      <div className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-[10px] font-bold text-white shadow-xs">
+                        {food.calories} kcal
+                      </div>
+                      <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-emerald/90 backdrop-blur-xs text-[9px] font-bold text-white shadow-xs">
+                        {food.proteinG}g P
+                      </div>
+                    </div>
+
                     <div>
-                      <div className="flex items-center justify-between gap-1 mb-1">
-                        <span className="font-bold text-xs truncate text-forest dark:text-white">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <span className="font-bold text-xs truncate text-forest dark:text-white" title={food.name}>
                           {food.name}
-                        </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald/20 text-emerald shrink-0">
-                          {food.calories} kcal
                         </span>
                       </div>
                       <div className="text-[11px] opacity-70 line-clamp-1">
@@ -709,8 +730,8 @@ export const FoodHubPage: React.FC<FoodHubPageProps> = ({
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] pt-1.5 border-t border-forest/8 dark:border-white/8">
-                      <span className="font-semibold text-emerald-700 dark:text-emerald-300">
-                        {food.proteinG}g protein
+                      <span className="font-semibold text-emerald-700 dark:text-emerald-300 capitalize">
+                        {food.category}
                       </span>
                       <span className="font-bold">
                         {isAvail ? 'In kitchen ✓' : isUnavail ? 'Marked out ✕' : '+ Add'}
@@ -784,17 +805,29 @@ export const FoodHubPage: React.FC<FoodHubPageProps> = ({
                   >
                     {pick ? (
                       <>
-                        <div className="space-y-1">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald dark:text-emerald-300">
-                            {slot.label} · {pick.recipe.prepMins} min
-                          </span>
-                          <p className="text-sm font-bold text-forest dark:text-white">
-                            {pick.recipe.name}
-                          </p>
-                          <p className="text-[11px] text-forest/70 dark:text-ivory/70">
-                            ~{pick.recipe.macros.calories} kcal · ~{pick.recipe.macros.proteinG}g P ·{' '}
-                            {pick.recipe.macros.fiberG}g fiber
-                          </p>
+                        <div className="flex items-center gap-3 min-w-0">
+                          {pick.recipe.imageUrl && (
+                            <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-emerald/20 shadow-xs bg-forest/5">
+                              <img
+                                src={pick.recipe.imageUrl}
+                                alt={pick.recipe.name}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+                          )}
+                          <div className="space-y-1 min-w-0">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald dark:text-emerald-300">
+                              {slot.label} · {pick.recipe.prepMins} min
+                            </span>
+                            <p className="text-sm font-bold text-forest dark:text-white truncate">
+                              {pick.recipe.name}
+                            </p>
+                            <p className="text-[11px] text-forest/70 dark:text-ivory/70">
+                              ~{pick.recipe.macros.calories} kcal · ~{pick.recipe.macros.proteinG}g P ·{' '}
+                              {pick.recipe.macros.fiberG}g fiber
+                            </p>
+                          </div>
                         </div>
                         <Button
                           size="sm"

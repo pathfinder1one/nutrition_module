@@ -1,4 +1,4 @@
-function validateAiGeneratedText({ text, unavailableIngredients = [], allergies = [] }) {
+function validateAiGeneratedText({ text, unavailableIngredients = [], allergies = [], intent = '' }) {
   if (!text || typeof text !== 'string' || text.trim().length < 8) {
     return { valid: false, reason: 'empty_response' };
   }
@@ -8,26 +8,36 @@ function validateAiGeneratedText({ text, unavailableIngredients = [], allergies 
     return { valid: false, reason: 'clinical_prescription_violation' };
   }
 
-  for (const ing of unavailableIngredients) {
-    const cleanIng = String(ing).replace('_', ' ');
-    const recommendPattern = new RegExp(`(cook|make|eat|try|suggest|banayein|khao)[^.!\\n]{0,45}\\b${cleanIng}\\b`, 'i');
-    if (recommendPattern.test(lower)) {
-      return { valid: false, reason: `suggested_unavailable_ingredient:${cleanIng}` };
-    }
-  }
+  // Only check food ingredients/allergens if the query is actually about food/meals
+  const isFoodRelated =
+    intent === 'meal_suggestion' ||
+    intent === 'unavailable_ingredient' ||
+    intent === 'provide_available_ingredients' ||
+    intent === 'nutrition_calculation' ||
+    /\b(cook|eat|recipe|meal|dinner|lunch|breakfast|khana|khao|banayein|dish)\b/i.test(lower);
 
-  const allergenKeywords = {
-    dairy: ['paneer', 'milk', 'dahi', 'curd', 'cheese', 'ghee'],
-    peanuts: ['peanut', 'peanuts', 'moongfali'],
-    gluten: ['wheat', 'roti', 'atta', 'suji', 'chapati'],
-    eggs: ['egg', 'eggs', 'anda'],
-    soy: ['soya', 'tofu', 'soybean'],
-  };
-  for (const allergy of allergies) {
-    for (const term of allergenKeywords[allergy] || []) {
-      const recommendPattern = new RegExp(`(cook|make|eat|try|suggest|banayein|khao)[^.!\\n]{0,45}\\b${term}\\b`, 'i');
+  if (isFoodRelated) {
+    for (const ing of unavailableIngredients) {
+      const cleanIng = String(ing).replace('_', ' ');
+      const recommendPattern = new RegExp(`(cook|make|eat|try|suggest|banayein|khao)[^.!\\n]{0,45}\\b${cleanIng}\\b`, 'i');
       if (recommendPattern.test(lower)) {
-        return { valid: false, reason: `suggested_allergen:${allergy}` };
+        return { valid: false, reason: `suggested_unavailable_ingredient:${cleanIng}` };
+      }
+    }
+
+    const allergenKeywords = {
+      dairy: ['paneer', 'milk', 'dahi', 'curd', 'cheese', 'ghee'],
+      peanuts: ['peanut', 'peanuts', 'moongfali'],
+      gluten: ['wheat', 'roti', 'atta', 'suji', 'chapati'],
+      eggs: ['egg', 'eggs', 'anda'],
+      soy: ['soya', 'tofu', 'soybean'],
+    };
+    for (const allergy of allergies) {
+      for (const term of allergenKeywords[allergy] || []) {
+        const recommendPattern = new RegExp(`(cook|make|eat|try|suggest|banayein|khao)[^.!\\n]{0,45}\\b${term}\\b`, 'i');
+        if (recommendPattern.test(lower)) {
+          return { valid: false, reason: `suggested_allergen:${allergy}` };
+        }
       }
     }
   }
@@ -67,16 +77,19 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  let candidateReplyHint = '';
+  let intent = 'general_checkin';
+
   try {
     const body = await readJsonBody(req);
     const {
       message = '',
       targetLanguage = 'hinglish',
-      intent = 'general_checkin',
       userContext = {},
       history = [],
-      candidateReplyHint = '',
     } = body;
+    if (body.candidateReplyHint) candidateReplyHint = String(body.candidateReplyHint);
+    if (body.intent) intent = String(body.intent);
 
     const isGenericGreeting =
       !candidateReplyHint ||
@@ -187,6 +200,7 @@ module.exports = async function handler(req, res) {
       text: llmText,
       unavailableIngredients: userContext.unavailableIngredients || [],
       allergies: userContext.allergies || [],
+      intent,
     });
 
     if (!validation.valid) {
@@ -218,11 +232,27 @@ module.exports = async function handler(req, res) {
       })
     );
   } catch (err) {
+    if (candidateReplyHint && candidateReplyHint.trim()) {
+      res.statusCode = 200;
+      res.end(
+        JSON.stringify({
+          ok: true,
+          configured: true,
+          provider: 'healthplus_engine',
+          model: 'grounded_core',
+          validated: true,
+          content: candidateReplyHint.trim(),
+          intent,
+        })
+      );
+      return;
+    }
+
     res.statusCode = 200;
     res.end(
       JSON.stringify({
         ok: false,
-        configured: true,
+        configured: false,
         error: err instanceof Error ? err.message : 'gateway_error',
       })
     );

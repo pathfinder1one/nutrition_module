@@ -6,13 +6,17 @@ Resolution strategy for a free-text food name:
   2. vector similarity via the `match_indian_foods` SQL function
 Macros are computed from DB values only - never from the LLM.
 """
+import logging
 import os
 import re
+import sys
 from functools import lru_cache
 from typing import Optional
 
 from fastembed import TextEmbedding
 from supabase import Client, create_client
+
+log = logging.getLogger("rag_nutrition")
 
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"  # 384 dims, matches vector(384)
 MIN_VECTOR_SIMILARITY = 0.55
@@ -63,16 +67,45 @@ def _norm(s: str) -> str:
 
 @lru_cache(maxsize=1)
 def _catalog() -> list[dict]:
-    rows = (
-        get_supabase()
-        .table("indian_food_nutrition")
-        .select("id,food_name,serving_unit,calories,protein_g,carbs_g,fats_g,region,category,diet_type,aliases")
-        .execute()
-        .data
-    )
-    if not rows:
-        raise RuntimeError("indian_food_nutrition is empty - run seed_indian_foods.py")
-    return rows
+    try:
+        rows = (
+            get_supabase()
+            .table("indian_food_nutrition")
+            .select("id,food_name,serving_unit,calories,protein_g,carbs_g,fats_g,region,category,diet_type,aliases")
+            .execute()
+            .data
+        )
+        if rows:
+            return rows
+    except Exception as e:
+        log.warning("Supabase catalog fetch failed (%s), loading local seed catalog", e)
+
+    # Robust local fallback from seed_indian_foods
+    try:
+        sys_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if sys_path not in sys.path:
+            sys.path.insert(0, sys_path)
+        from seed_indian_foods import FOODS
+        rows = []
+        for idx, item in enumerate(FOODS, 1):
+            fn, su, cal, pro, carb, fat, reg, cat, diet, aliases = item
+            rows.append({
+                "id": str(idx),
+                "food_name": fn,
+                "serving_unit": su,
+                "calories": float(cal),
+                "protein_g": float(pro),
+                "carbs_g": float(carb),
+                "fats_g": float(fat),
+                "region": reg,
+                "category": cat,
+                "diet_type": diet,
+                "aliases": aliases or []
+            })
+        return rows
+    except Exception as e2:
+        log.error("Could not load local seed catalog: %s", e2)
+        raise RuntimeError("No food catalog available")
 
 
 def refresh_catalog() -> None:
@@ -123,17 +156,51 @@ def search_foods(
     diets: Optional[list[str]] = None,
     min_similarity: float = 0.0,
 ) -> list[dict]:
-    res = get_supabase().rpc(
-        "match_indian_foods",
-        {
-            "query_embedding": embed(query),
-            "match_count": k,
-            "min_similarity": min_similarity,
-            "filter_category": category,
-            "allowed_diets": diets,
-        },
-    ).execute()
-    return res.data or []
+    try:
+        res = get_supabase().rpc(
+            "match_indian_foods",
+            {
+                "query_embedding": embed(query),
+                "match_count": k,
+                "min_similarity": min_similarity,
+                "filter_category": category,
+                "allowed_diets": diets,
+            },
+        ).execute()
+        if res.data:
+            return res.data
+    except Exception as e:
+        log.warning("Supabase match_indian_foods failed (%s), running local search", e)
+
+    # Local fallback matching over in-memory catalog
+    q_norm = _norm(query)
+    q_words = set(q_norm.split())
+    matches = []
+    for r in _catalog():
+        if category and r.get("category") != category:
+            continue
+        if diets and r.get("diet_type") not in diets:
+            continue
+        fn_norm = _norm(r["food_name"])
+        aliases = [r["food_name"]] + (r.get("aliases") or [])
+        score = 0.0
+        if q_norm == fn_norm or any(q_norm == _norm(a) for a in aliases):
+            score = 1.0
+        elif q_norm in fn_norm or any(q_norm in _norm(a) for a in aliases):
+            score = 0.85
+        elif any(_norm(a) in q_norm for a in aliases):
+            score = 0.80
+        else:
+            fn_words = set(fn_norm.split())
+            common = q_words.intersection(fn_words)
+            if common:
+                score = 0.60 + 0.1 * min(len(common), 3)
+
+        if score >= max(min_similarity, 0.5):
+            matches.append({**r, "similarity": score})
+
+    matches.sort(key=lambda x: x["similarity"], reverse=True)
+    return matches[:k]
 
 
 def resolve_food(name: str) -> Optional[dict]:

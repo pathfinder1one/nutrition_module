@@ -20,7 +20,7 @@ from functools import lru_cache
 from typing import Any, Optional
 
 PROVIDER = os.getenv("LLM_PROVIDER", "gemini").strip().lower()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5-5")
 
 
@@ -67,19 +67,26 @@ def _parse_json(text: str) -> dict:
 
 
 def _gemini_structured(system: str, user_content: Any, schema: dict, max_tokens: int, model: Optional[str]) -> dict:
-    model = model or GEMINI_MODEL
-    resp = _gemini_client().models.generate_content(
-        model=model,
-        contents=_to_gemini_contents(user_content),
-        config=_gemini_config(
-            model,
-            system_instruction=system,
-            response_mime_type="application/json",
-            response_json_schema=schema,
-            max_output_tokens=max_tokens,
-            temperature=0.2,
-        ),
+    target_model = model or GEMINI_MODEL
+    client = _gemini_client()
+    contents = _to_gemini_contents(user_content)
+    config = _gemini_config(
+        target_model,
+        system_instruction=system,
+        response_mime_type="application/json",
+        response_json_schema=schema,
+        max_output_tokens=max_tokens,
+        temperature=0.2,
     )
+    try:
+        resp = client.models.generate_content(model=target_model, contents=contents, config=config)
+    except Exception as e:
+        err_str = str(e)
+        if ("404" in err_str or "NOT_FOUND" in err_str or "is not found" in err_str) and target_model != "gemini-2.0-flash-lite":
+            # If 3.5-flash-lite is not yet in public endpoint, route smoothly to 2.0-flash-lite
+            resp = client.models.generate_content(model="gemini-2.0-flash-lite", contents=contents, config=config)
+        else:
+            raise
     if not resp.text:
         raise RuntimeError("Gemini returned no content (possibly blocked by safety filters)")
     try:
@@ -89,12 +96,17 @@ def _gemini_structured(system: str, user_content: Any, schema: dict, max_tokens:
 
 
 def _gemini_text(system: str, user: str, max_tokens: int, model: Optional[str]) -> str:
-    model = model or GEMINI_MODEL
-    resp = _gemini_client().models.generate_content(
-        model=model,
-        contents=user,
-        config=_gemini_config(model, system_instruction=system, max_output_tokens=max(max_tokens, 200), temperature=0.4),
-    )
+    target_model = model or GEMINI_MODEL
+    client = _gemini_client()
+    config = _gemini_config(target_model, system_instruction=system, max_output_tokens=max(max_tokens, 200), temperature=0.4)
+    try:
+        resp = client.models.generate_content(model=target_model, contents=user, config=config)
+    except Exception as e:
+        err_str = str(e)
+        if ("404" in err_str or "NOT_FOUND" in err_str or "is not found" in err_str) and target_model != "gemini-2.0-flash-lite":
+            resp = client.models.generate_content(model="gemini-2.0-flash-lite", contents=user, config=config)
+        else:
+            raise
     return (resp.text or "").strip()
 
 

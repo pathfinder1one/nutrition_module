@@ -20,16 +20,18 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 from routes.nutrition import router as nutrition_router  # noqa: E402
+from routes.workout import router as workout_router  # noqa: E402
 
-app = FastAPI(title="HEALTH PLUS - Nutrition Module", version="1.0.0")
+app = FastAPI(title="HEALTH PLUS - Unified Nutrition & Formwise Exercise Engine", version="1.0.0")
 
-origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
+origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware, allow_origins=origins, allow_credentials=True,
     allow_methods=["*"], allow_headers=["*"],
 )
 
 app.include_router(nutrition_router, prefix="/api/nutrition")
+app.include_router(workout_router, prefix="/api/workout")
 
 
 @app.get("/health")

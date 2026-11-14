@@ -268,6 +268,7 @@ export interface NutritionRecipe {
   whyItFits: string;
   steps: string[];
   visualTheme: RecipeVisualTheme;
+  imageUrl?: string;
   swaps: string[];
 }
 
@@ -300,7 +301,15 @@ export interface LoggedMeal {
   provenanceLabel: string;
 }
 
-export type ExerciseTypeId = 'squat' | 'pushup' | 'glute_bridge';
+export type ExerciseTypeId =
+  | 'squat'
+  | 'pushup'
+  | 'jumping_jack'
+  | 'lunge'
+  | 'bicep_curl'
+  | 'high_knees'
+  | 'wall_sit'
+  | 'glute_bridge';
 
 export interface WorkoutSession {
   id: string;

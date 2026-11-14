@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd healthplus-main/frontend && npm install",
+  "buildCommand": "cd healthplus-main/frontend && npm run build",
+  "outputDirectory": "healthplus-main/frontend/dist",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/healthplus-main/api/$1"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/healthplus-main/frontend/dist/index.html"
+    }
+  ]
+}

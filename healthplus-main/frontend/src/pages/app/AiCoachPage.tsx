@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { useApp } from '@/context/AppContext';
 import {
   useVoiceCompanion,
@@ -55,9 +54,6 @@ export const AiCoachPage: React.FC<AiCoachPageProps> = ({ onNavigate = () => {} 
     activeSafetyBanners,
     logMeal,
     sendUserMessage,
-    aiProviderMode,
-    aiProviderLabel,
-    persistenceMode,
   } = useApp();
   const [showPipelineDetails, setShowPipelineDetails] = useState(false);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
@@ -65,6 +61,7 @@ export const AiCoachPage: React.FC<AiCoachPageProps> = ({ onNavigate = () => {} 
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
   const [selectedPhotoPreview, setSelectedPhotoPreview] = useState<string | null>(null);
   const threadContainerRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isVoiceInputActiveRef = useRef<boolean>(false);
@@ -92,11 +89,17 @@ export const AiCoachPage: React.FC<AiCoachPageProps> = ({ onNavigate = () => {} 
     stopAllVoice,
   } = useVoiceCompanion(prefLang);
 
-  useEffect(() => {
-    const el = threadContainerRef.current;
-    if (el) {
-      el.scrollTop = el.scrollHeight;
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (threadContainerRef.current) {
+      threadContainerRef.current.scrollTop = threadContainerRef.current.scrollHeight;
     }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+    const timer = setTimeout(scrollToBottom, 120);
+    return () => clearTimeout(timer);
   }, [state.chatMessages.length]);
 
   if (!profile || !targets) return null;
@@ -160,19 +163,14 @@ export const AiCoachPage: React.FC<AiCoachPageProps> = ({ onNavigate = () => {} 
   };
 
   const quickStarters = [
-    '📸 Scan food plate',
     'Maine 2 aloo parathe aur dahi khaya',
-    'Mera nutrition pattern kaisa hai?',
     'What should I eat for dinner tonight?',
-    'Aaj raat dinner mein kya banau?',
+    'Ye batao kya kya exercise krni chahiye?',
+    'Mera nutrition pattern kaisa hai?',
     "I don't have paneer at home",
   ];
 
   const handleStarterClick = (q: string) => {
-    if (q.includes('Scan food plate')) {
-      fileInputRef.current?.click();
-      return;
-    }
     handleSubmit(q);
   };
 
@@ -185,40 +183,38 @@ export const AiCoachPage: React.FC<AiCoachPageProps> = ({ onNavigate = () => {} 
 
   return (
     <div className="space-y-5 pb-20 text-left animate-fadeIn max-w-4xl mx-auto">
-      {/* Header + Alexa/Jarvis Interactive Voice Stage */}
-      <Card variant="elevated" className="overflow-hidden border-emerald/20 p-0">
-        <div className="p-5 sm:p-6 bg-gradient-to-br from-forest to-[#0D3229] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-          <div className="flex items-center gap-4">
-            {/* Reactive 3D Neural Companion Core */}
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 flex items-center justify-center rounded-2xl bg-black/20 border border-white/15 overflow-hidden">
+      {/* Sleek Minimalist Header */}
+      <Card variant="elevated" className="overflow-hidden border-forest/10 dark:border-white/10 p-0 shadow-sm">
+        <div className="px-4 py-3 sm:px-6 sm:py-3.5 bg-gradient-to-r from-forest via-[#0F382E] to-forest text-white flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {/* Reactive 3D HoloOrb Core */}
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center rounded-xl bg-black/25 border border-white/15 overflow-hidden">
               <HoloOrb3D reactivePhase={voicePhase} className="w-full h-full" />
             </div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="gold" size="sm">
-                  Hindi · Hinglish · English
-                </Badge>
-                <span className="text-[11px] text-emerald-200 font-semibold">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="font-heading font-bold text-base sm:text-lg tracking-tight">
+                  AI Health Companion
+                </h1>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald/20 text-[10px] text-emerald-200 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" />
                   {voicePhase === 'listening'
-                    ? 'Listening to you — edit text anytime'
+                    ? 'Listening…'
                     : voicePhase === 'thinking'
-                      ? 'Checking pantry, goals & safety rules…'
+                      ? 'Thinking…'
                       : voicePhase === 'speaking'
-                        ? 'Speaking response aloud'
-                        : `Ready for ${profile.basic.name}`}
+                        ? 'Speaking…'
+                        : `Ready for ${profile.basic.name.split(' ')[0]}`}
                 </span>
               </div>
-              <h1 className="font-heading font-extrabold text-xl sm:text-2xl">
-                Personal AI Wellness Companion
-              </h1>
-              <p className="text-xs text-white/75">
-                Remembers kitchen ingredients across turns and filters every answer by your safety profile.
+              <p className="text-[11px] text-white/70 hidden sm:block">
+                Personalized nutrition, movement &amp; real-time guidance
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               size="sm"
               variant={voicePhase === 'listening' ? 'danger' : 'gold'}
@@ -232,7 +228,8 @@ export const AiCoachPage: React.FC<AiCoachPageProps> = ({ onNavigate = () => {} 
                   startListening();
                 }
               }}
-              leftIcon={voicePhase === 'listening' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              leftIcon={voicePhase === 'listening' ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+              className="text-xs py-1.5 px-3"
             >
               {voicePhase === 'listening' ? 'Stop Mic' : 'Talk by Voice'}
             </Button>
@@ -242,132 +239,114 @@ export const AiCoachPage: React.FC<AiCoachPageProps> = ({ onNavigate = () => {} 
                 size="sm"
                 variant="danger"
                 onClick={stopAllVoice}
-                leftIcon={<Square className="w-3.5 h-3.5" />}
+                leftIcon={<Square className="w-3 h-3" />}
+                className="text-xs py-1.5 px-2.5"
               >
-                Interrupt
+                Stop
               </Button>
             )}
 
             <button
               type="button"
               onClick={() => setVoiceOutputEnabled((v) => !v)}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white"
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+              title={voiceOutputEnabled ? 'Mute voice audio' : 'Enable voice audio'}
               aria-label="Toggle voice response"
             >
-              {voiceOutputEnabled ? <Volume2 className="w-4 h-4 text-emerald-300" /> : <VolumeX className="w-4 h-4" />}
+              {voiceOutputEnabled ? <Volume2 className="w-4 h-4 text-emerald-300" /> : <VolumeX className="w-4 h-4 text-white/60" />}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowVoiceSettings((v) => !v)}
+              className={`p-2 rounded-xl transition-colors ${
+                showVoiceSettings ? 'bg-white/25 text-white' : 'bg-white/10 hover:bg-white/20 text-white/80'
+              }`}
+              title="Voice controls"
+            >
+              {showVoiceSettings ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
           </div>
         </div>
       </Card>
 
-      {/* Active Memory, Provider Honesty & Voice Preferences Bar */}
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`px-2.5 py-1 rounded-full font-semibold ${
-                aiProviderMode === 'live_llm_gateway'
-                  ? 'bg-emerald/15 text-emerald dark:text-emerald-300'
-                  : 'bg-forest/8 dark:bg-white/10 text-forest/80 dark:text-ivory/80'
-              }`}
-            >
-              AI Mode: {aiProviderLabel}
-            </span>
-            <span className="px-2.5 py-1 rounded-full bg-forest/6 dark:bg-white/8 text-forest/75 dark:text-ivory/75 font-semibold">
-              Storage:{' '}
-              {persistenceMode === 'supabase_connected'
-                ? 'Supabase Sync'
-                : 'Local Browser Vault Only'}
-            </span>
-            {rememberedUnavailable.length > 0 && (
-              <span className="px-2.5 py-1 rounded-full bg-rose-500/12 text-rose-700 dark:text-rose-300 font-semibold">
-                Memory excluded:{' '}
-                {rememberedUnavailable.map((i) => getIngredientLabel(i).split(' / ')[0]).join(', ')}
+      {/* Voice Controls Drawer (Only when user expands it) */}
+      {showVoiceSettings && (
+        <div className="p-3 rounded-2xl bg-white/90 dark:bg-[#0A1E17] border border-forest/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs animate-fadeIn">
+          <div>
+            <p className="font-bold text-forest dark:text-white">
+              {voiceProviderInfo.label}
+            </p>
+            <p className="text-[11px] text-forest/65 dark:text-ivory/65">
+              Mic status: <span className="font-semibold">{voiceProviderInfo.micPermission}</span> · Spoken output:{' '}
+              <span className="font-semibold">
+                {voiceProviderInfo.ttsSupported ? 'Available' : 'Unavailable'}
               </span>
-            )}
-            {activeSafetyBanners.length > 0 && (
-              <span className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-800 dark:text-gold font-semibold">
-                {activeSafetyBanners.length} safety rule(s) active
-              </span>
-            )}
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setShowVoiceSettings((v) => !v)}
-              className="inline-flex items-center gap-1 font-semibold text-forest/70 dark:text-ivory/70 hover:text-forest dark:hover:text-white"
-            >
-              <span>{showVoiceSettings ? 'Hide Voice Controls' : 'Voice Controls'}</span>
-            </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-forest/70 dark:text-ivory/70">Speed:</span>
+              {([0.85, 1.0, 1.15] as SpeechRateOption[]).map((rate) => (
+                <button
+                  key={rate}
+                  type="button"
+                  onClick={() => setSpeechRate(rate)}
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-bold border ${
+                    speechRate === rate
+                      ? 'bg-emerald text-white border-emerald'
+                      : 'bg-forest/5 dark:bg-white/5 text-forest dark:text-ivory border-forest/15 dark:border-white/15'
+                  }`}
+                >
+                  {rate}x
+                </button>
+              ))}
+            </div>
+
+            {availableVoices.length > 0 && (
+              <select
+                aria-label="Select spoken voice"
+                value={selectedVoiceURI}
+                onChange={(e) => setSelectedVoiceURI(e.target.value)}
+                className="px-2 py-1 rounded-lg text-[11px] bg-white dark:bg-[#0D281E] border border-forest/15 dark:border-white/15 text-forest dark:text-white"
+              >
+                {availableVoices.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI}>
+                    {v.name} ({v.lang})
+                  </option>
+                ))}
+              </select>
+            )}
+
             <button
               type="button"
               onClick={() => setShowPipelineDetails((v) => !v)}
-              className="inline-flex items-center gap-1 font-semibold text-forest/70 dark:text-ivory/70 hover:text-forest dark:hover:text-white"
+              className="text-[11px] font-medium text-forest/60 dark:text-ivory/60 hover:text-emerald underline underline-offset-2"
             >
-              {showPipelineDetails ? (
-                <ChevronUp className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronDown className="w-3.5 h-3.5" />
-              )}
-              <span>
-                {showPipelineDetails ? 'Hide reasoning trace' : 'Show safety & pipeline trace'}
-              </span>
+              {showPipelineDetails ? 'Hide pipeline trace' : 'Reasoning trace'}
             </button>
           </div>
         </div>
+      )}
 
-        {showVoiceSettings && (
-          <div className="p-3 rounded-2xl bg-white/80 dark:bg-[#0A1E17] border border-forest/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div>
-              <p className="font-bold text-forest dark:text-white">
-                {voiceProviderInfo.label}
-              </p>
-              <p className="text-[11px] text-forest/65 dark:text-ivory/65">
-                Mic status: <span className="font-semibold">{voiceProviderInfo.micPermission}</span> · Spoken output:{' '}
-                <span className="font-semibold">
-                  {voiceProviderInfo.ttsSupported ? 'Available' : 'Unavailable'}
-                </span>
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-forest/70 dark:text-ivory/70">Speed:</span>
-                {([0.85, 1.0, 1.15] as SpeechRateOption[]).map((rate) => (
-                  <button
-                    key={rate}
-                    type="button"
-                    onClick={() => setSpeechRate(rate)}
-                    className={`px-2 py-0.5 rounded-lg text-[11px] font-bold border ${
-                      speechRate === rate
-                        ? 'bg-emerald text-white border-emerald'
-                        : 'bg-forest/5 dark:bg-white/5 text-forest dark:text-ivory border-forest/15 dark:border-white/15'
-                    }`}
-                  >
-                    {rate}x
-                  </button>
-                ))}
-              </div>
-
-              {availableVoices.length > 0 && (
-                <select
-                  aria-label="Select spoken voice"
-                  value={selectedVoiceURI}
-                  onChange={(e) => setSelectedVoiceURI(e.target.value)}
-                  className="px-2 py-1 rounded-lg text-[11px] bg-white dark:bg-[#0D281E] border border-forest/15 dark:border-white/15 text-forest dark:text-white"
-                >
-                  {availableVoices.map((v) => (
-                    <option key={v.voiceURI} value={v.voiceURI}>
-                      {v.name} ({v.lang})
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Discreet Health Status Pill - ONLY shown when there are exclusions or active safety rules */}
+      {(rememberedUnavailable.length > 0 || activeSafetyBanners.length > 0) && (
+        <div className="flex flex-wrap items-center gap-2 text-xs px-1">
+          {rememberedUnavailable.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[11px] font-medium border border-rose-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+              Excluded today: {rememberedUnavailable.map((i) => getIngredientLabel(i).split(' / ')[0]).join(', ')}
+            </span>
+          )}
+          {activeSafetyBanners.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 text-[11px] font-medium border border-amber-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              {activeSafetyBanners.length} safety rule active
+            </span>
+          )}
+        </div>
+      )}
 
       {loggedNote && (
         <div className="p-3 rounded-xl bg-emerald/15 border border-emerald/30 text-xs font-semibold text-forest dark:text-emerald-200">
@@ -380,7 +359,7 @@ export const AiCoachPage: React.FC<AiCoachPageProps> = ({ onNavigate = () => {} 
         <div className="space-y-4">
           <div
             ref={threadContainerRef}
-            className="space-y-4 h-[38vh] min-h-[250px] max-h-[360px] overflow-y-auto pr-1"
+            className="space-y-4 h-[56vh] min-h-[420px] max-h-[620px] overflow-y-auto pr-1.5 scroll-smooth"
           >
             {state.chatMessages.map((msg) => (
               <div
@@ -493,19 +472,23 @@ export const AiCoachPage: React.FC<AiCoachPageProps> = ({ onNavigate = () => {} 
                 )}
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
 
-          {/* Conversation Prompts */}
-          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-forest/8 dark:border-white/10">
+          {/* Conversation Starters (Single-row sleek horizontal scroll strip) */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 pt-2 border-t border-forest/8 dark:border-white/10 text-nowrap whitespace-nowrap">
+            <span className="text-[11px] font-bold text-forest/50 dark:text-ivory/50 shrink-0">
+              Try:
+            </span>
             {quickStarters.map((q) => (
               <button
                 key={q}
                 type="button"
                 onClick={() => handleStarterClick(q)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-forest/5 dark:bg-white/5 hover:bg-emerald/15 border border-forest/10 dark:border-white/10 text-[11px] font-semibold text-forest/80 dark:text-ivory/80 transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-forest/5 dark:bg-white/5 hover:bg-emerald/15 hover:border-emerald/30 border border-forest/10 dark:border-white/10 text-xs font-medium text-forest/80 dark:text-ivory/80 transition-all shrink-0 hover:scale-[1.02] active:scale-95"
               >
-                <Sparkles className="w-3 h-3 text-emerald" />
-                {q}
+                <Sparkles className="w-3 h-3 text-emerald shrink-0" />
+                <span>{q}</span>
               </button>
             ))}
           </div>

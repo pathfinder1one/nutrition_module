@@ -46,11 +46,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       tag: 'Nutrition & Recipes',
     },
     {
-      label: 'Move',
+      label: 'Exercises',
       path: '/move',
-      aliases: ['/move', '/exercise-studio', '/voice-coach', '/exercise'],
+      aliases: ['/move', '/exercise-studio', '/voice-coach', '/exercise', '/exercises'],
       icon: <Activity className="w-4 h-4 text-emerald-400" />,
-      tag: 'Kinematics & Coach',
+      tag: '7+ AI Workouts',
     },
     {
       label: 'AI Coach',

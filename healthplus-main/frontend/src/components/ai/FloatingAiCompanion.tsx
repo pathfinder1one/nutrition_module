@@ -11,9 +11,11 @@ import {
   Square,
   ShieldAlert,
   Camera,
+  Radio,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useVoiceCompanion } from '@/hooks/useVoiceCompanion';
+import { RealTimeVoiceAssistantModal } from '@/components/ai/RealTimeVoiceAssistantModal';
 import type { ChatActionChip } from '@/types/wellness';
 
 export interface FloatingAiCompanionProps {
@@ -44,6 +46,7 @@ export const FloatingAiCompanion: React.FC<FloatingAiCompanionProps> = ({
 }) => {
   const { state, sendUserMessage } = useApp();
   const [isOpen, setIsOpen] = useState(false);
+  const [showLiveVoiceModal, setShowLiveVoiceModal] = useState(false);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
   const [selectedPhotoPreview, setSelectedPhotoPreview] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -191,6 +194,15 @@ export const FloatingAiCompanion: React.FC<FloatingAiCompanionProps> = ({
                   Stop
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => setShowLiveVoiceModal(true)}
+                className="px-2 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 text-[10px] font-bold flex items-center gap-1 transition-colors"
+                title="Open Real-Time Voice Talk Mode"
+              >
+                <Radio className="w-3 h-3 text-emerald-300 animate-pulse" />
+                <span>Voice Talk</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setVoiceOutputEnabled((v) => !v)}
@@ -376,6 +388,12 @@ export const FloatingAiCompanion: React.FC<FloatingAiCompanionProps> = ({
           </div>
         </div>
       )}
+
+      {/* Real-time Voice Talk Modal */}
+      <RealTimeVoiceAssistantModal
+        isOpen={showLiveVoiceModal}
+        onClose={() => setShowLiveVoiceModal(false)}
+      />
     </div>
   );
 };

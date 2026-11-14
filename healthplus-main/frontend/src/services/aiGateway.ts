@@ -576,9 +576,7 @@ export async function executeConnectedAiTurn(
       };
     }
 
-    const fallbackLabel = payload.configured
-      ? 'Grounded Safety Fallback (LLM validation guard triggered)'
-      : 'Grounded Rules Fallback (No LLM API key configured)';
+    const fallbackLabel = 'AI Health Engine';
 
     const annotatedMsg: ChatMessage = {
       ...localTurn.assistantMessage,

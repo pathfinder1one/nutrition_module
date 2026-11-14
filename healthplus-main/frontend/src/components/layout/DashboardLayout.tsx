@@ -353,8 +353,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           })}
         </nav>
 
-        {/* Global Persistent Floating AI Companion */}
-        <FloatingAiCompanion onNavigate={onNavigate} />
+        {/* Global Persistent Floating AI Companion (hidden on /coach page to avoid redundant clutter) */}
+        {currentPath !== '/coach' && <FloatingAiCompanion onNavigate={onNavigate} />}
       </div>
     </div>
   );

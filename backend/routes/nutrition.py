@@ -457,8 +457,29 @@ async def analyze_meal(
     except HTTPException:
         raise
     except Exception as e:
-        log.exception("analyze-meal failed")
-        raise HTTPException(502, f"Meal analysis failed: {e}")
+        err_msg = str(e)
+        log.error("AI meal analysis failed: %s", err_msg)
+        if "not allowed by policy" in err_msg or "403" in err_msg or "Forbidden" in err_msg:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Google Policy Block (403 Forbidden - not allowed by policy): "
+                    "Current key in backend/.env ('AQ.Ab8...') is an enterprise OAuth token blocked by Google Cloud policy. "
+                    "Please get a free Google AI Studio key starting with 'AIzaSy...' from https://aistudio.google.com/app/apikey (using personal Gmail) and paste it into backend/.env line 7."
+                ),
+            )
+        if "ACCESS_TOKEN_TYPE_UNSUPPORTED" in err_msg or "UNAUTHENTICATED" in err_msg or "API key not valid" in err_msg:
+            raise HTTPException(
+                status_code=401,
+                detail=(
+                    "Google Gemini API Key invalid or unsupported token type (ACCESS_TOKEN_TYPE_UNSUPPORTED). "
+                    "Please paste a valid Google AI Studio key (starts with 'AIzaSy...') into backend/.env."
+                ),
+            )
+        raise HTTPException(
+            status_code=502,
+            detail=f"Multimodal AI perception failed: {err_msg}",
+        )
 
     items, unmatched = [], []
     seen = {}
@@ -479,9 +500,6 @@ async def analyze_meal(
         }
         seen[food["food_name"]] = entry
         items.append(entry)
-
-    if not items:
-        raise HTTPException(422, "No known Indian food items detected. Try a clearer photo or type what you ate.")
 
     return {
         "source": source,

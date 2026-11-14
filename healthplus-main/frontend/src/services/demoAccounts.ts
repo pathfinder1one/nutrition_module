@@ -305,7 +305,7 @@ export function buildDemoInitialState(
         preferredLanguage: 'auto',
       },
       foodPreferences: {
-        dietaryPattern: 'eggetarian',
+        dietaryPattern: 'vegetarian',
         cuisinePreferences: ['homestyle_pan_indian', 'north_indian'],
         spiceTolerance: 'bold',
         dislikedFoods: [],
@@ -321,7 +321,6 @@ export function buildDemoInitialState(
       },
       foodAvailability: {
         availableIngredients: [
-          'eggs',
           'paneer',
           'soya_chunks',
           'dal',
@@ -336,7 +335,7 @@ export function buildDemoInitialState(
           'tomato_onion',
           'ghee_oil',
         ],
-        unavailableIngredients: [],
+        unavailableIngredients: ['eggs', 'chicken', 'mutton', 'fish'],
         lastUpdatedDate: todayISO,
       },
       safety: {

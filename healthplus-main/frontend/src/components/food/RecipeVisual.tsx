@@ -1,9 +1,11 @@
 import React from 'react';
 import type { RecipeVisualTheme } from '@/types/wellness';
 
-interface RecipeVisualProps {
+export interface RecipeVisualProps {
   theme: RecipeVisualTheme;
   className?: string;
+  imageUrl?: string;
+  name?: string;
 }
 
 const THEME_PALETTES: Record<
@@ -130,9 +132,9 @@ const THEME_FOOD_IMAGES: Record<RecipeVisualTheme, string> = {
   khichdi_pot: 'https://images.unsplash.com/photo-1645177628172-a94c1f96e6db?auto=format&fit=crop&w=600&q=80',
   oats_bowl: 'https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=600&q=80',
   paneer_skillet: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=600&q=80',
-  egg_bhurji: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=600&q=80',
+  egg_bhurji: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=600&q=80',
   curd_rice: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80',
-  poha_plate: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80',
+  poha_plate: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80',
   soya_stir: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=600&q=80',
   sprouts_chaat: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
   chicken_bowl: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=600&q=80',
@@ -141,9 +143,14 @@ const THEME_FOOD_IMAGES: Record<RecipeVisualTheme, string> = {
   roti_sabzi: 'https://images.unsplash.com/photo-1626074353765-517a681e40be?auto=format&fit=crop&w=600&q=80',
 };
 
-export const RecipeVisual: React.FC<RecipeVisualProps> = ({ theme, className = '' }) => {
+export const RecipeVisual: React.FC<RecipeVisualProps> = ({
+  theme,
+  className = '',
+  imageUrl,
+  name,
+}) => {
   const p = THEME_PALETTES[theme] ?? THEME_PALETTES.dal_bowl;
-  const foodImg = THEME_FOOD_IMAGES[theme];
+  const foodImg = imageUrl || THEME_FOOD_IMAGES[theme];
   const [hasError, setHasError] = React.useState(false);
 
   return (
@@ -155,7 +162,7 @@ export const RecipeVisual: React.FC<RecipeVisualProps> = ({ theme, className = '
         <div className="relative w-full h-full min-h-[96px] overflow-hidden rounded-2xl">
           <img
             src={foodImg}
-            alt={theme}
+            alt={name || theme}
             loading="lazy"
             onError={() => setHasError(true)}
             className="w-full h-full min-h-[96px] object-cover transition-transform duration-500 hover:scale-105"

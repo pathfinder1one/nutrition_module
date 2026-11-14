@@ -146,7 +146,31 @@ export function recommendMeals(
       continue;
     }
 
-    // 7. Required Pantry Availability Check
+    // 7. Hard Meal Slot Guard
+    // When requesting a snack, NEVER recommend full lunch or dinner main dishes (curries with roti/naan, kadhi chawal, biryani, thalis).
+    if (constraints.mealSlot === 'snack') {
+      if (recipe.mealSlot !== 'snack' || recipe.macros.calories > 330) {
+        excludedCount++;
+        blockedReasonsSet.add('Excluded full lunch/dinner main meals from snacks');
+        continue;
+      }
+    } else if (constraints.mealSlot === 'breakfast') {
+      // Breakfast must be breakfast staples or light morning snacks, never heavy lunch/dinner combos
+      if (recipe.mealSlot === 'dinner' || recipe.mealSlot === 'lunch') {
+        excludedCount++;
+        blockedReasonsSet.add('Excluded heavy dinner/lunch meals from breakfast');
+        continue;
+      }
+    } else if (constraints.mealSlot === 'lunch' || constraints.mealSlot === 'dinner') {
+      // Lunch and dinner must be nourishing main meals, not light finger snacks or drinks
+      if (recipe.mealSlot === 'snack' && recipe.macros.calories < 280) {
+        excludedCount++;
+        blockedReasonsSet.add('Excluded light snacks from main meal recommendations');
+        continue;
+      }
+    }
+
+    // 8. Required Pantry Availability Check
     const missingIngredients = recipe.requiredIngredients.filter(
       (req) => effectiveAvailable.size > 0 && !effectiveAvailable.has(req)
     );
@@ -164,11 +188,11 @@ export function recommendMeals(
     // Meal slot match
     if (constraints.mealSlot) {
       if (recipe.mealSlot === constraints.mealSlot) {
-        score += 32;
+        score += 45;
       } else if (isMealSlotCompatible(constraints.mealSlot, recipe.mealSlot)) {
-        score += 12;
+        score += 15;
       } else {
-        score -= 22;
+        score -= 90;
       }
     }
 

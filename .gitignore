@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Builds & Outputs
+dist/
+build/
+.vercel/
+healthplus-main/.vercel/
+healthplus-main/frontend/dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+backend/.venv/
+backend/__pycache__/
+backend/routes/__pycache__/
+backend/*.task
+
+# Duplicate archives & local folders
+health-plus-main/
+Repetition-Counter--main/
+
+# Environment files with secrets
+.env
+.env.local
+backend/.env
+
+# Logs
+*.log
+npm-debug.log*
