@@ -10,8 +10,9 @@ build/
 healthplus-main/.vercel/
 healthplus-main/frontend/dist/
 
-# Large binary/GIF assets — not suitable for HTTPS git push
-healthplus-main/frontend/public/previews/
+# Large binary/GIF subfolders — only mannequin base GIFs included
+healthplus-main/frontend/public/previews/man-athletic/
+healthplus-main/frontend/public/previews/woman-casual/
 
 # Python
 __pycache__/
